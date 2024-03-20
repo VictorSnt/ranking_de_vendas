@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ranking de Vendas</title>
+
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background-color: #f2f4f7; /* Mantido neutro para não sobrecarregar o design */
+    }
+
+    h1 {
+        text-align: center;
+        margin-bottom: 20px;
+        color: #28a745; /* Verde para sucesso */
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    th, td {
+        padding: 15px;
+        text-align: left;
+    }
+
+    th {
+        background-color: #28a745; /* Verde para crescimento */
+        color: #ffffff;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+
+    tr:nth-child(even) {
+        background-color: #d3d9df; /* Azul mais suave */
+        transition: background-color 0.3s ease;
+    }
+
+    tr:nth-child(odd) {
+        background-color: #e5e8ea; /* Cinza mais claro */
+        transition: background-color 0.3s ease;
+    }
+
+    tr:hover {
+        background-color: #ffd166; /* Amarelo para chamar atenção */
+        transition: background-color 0.3s ease;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .progress-bar {
+        position: relative;
+        height: 20px;
+        border-radius: 20px;
+        margin: 5px 0;
+        width: 100%;
+        overflow: hidden;
+        background-color: #f3f3f3;
+    }
+
+    .progress-bar-fill {
+        height: 100%;
+        border-radius: 20px;
+        background-color: green; /* Vermelho para urgência */
+        position: relative;
+        animation: fillAnimation 2s ease forwards;
+    }
+
+    .progress-bar-text {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: #000;
+        font-weight: bold;
+        animation: textAnimation 2s ease forwards;
+    }
+
+    /* Animações mantidas iguais */
+
+    .rank {
+        font-size: 18px;
+        font-weight: bold;
+    }
+
+    .button-container {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .button-container button {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: background-color 0.3s ease;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    #diaria {
+        background-color: #007bff; /* Azul */
+        color: #ffffff;
+        margin-right: 10px;
+    }
+
+    #mensal {
+        background-color: #06da45; /* Azul */
+        color: #ffffff;
+    }
+
+    #datepicker {
+        background-color: #ec4604; /* Azul */
+        color: #ffffff;
+    }
+
+    .button-container button:hover {
+        background-color: #0056b3; /* Azul mais escuro */
+        transition: background-color 0.3s ease;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .button-container button.selected {
+        background-color: #6c757d; /* Cinza */
+    }
+
+    .button-container button.selected:hover {
+        background-color: #5a6268; /* Cinza mais escuro */
+    }
+
+    .icon {
+        width: 20px;
+        height: 20px;
+        vertical-align: middle;
+    }
+    #openCalendarButton {
+        background-color: #ffffff;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        font-family: 'Arial', sans-serif;
+        font-size: 16px;
+        padding: 10px;
+        margin: 5px 0;
+        width: 10%;
+        color: #495057;
+        box-shadow: 0px 3px 6px 0px rgba(0,0,0,0.16);
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+    }
+
+    #openCalendarButton:hover {
+    border-color: #80bdff;
+    }
+
+    #openCalendarButton:focus {
+    outline: none;
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+    }
+    input[type="date"]::-webkit-calendar-picker-indicator {
+        cursor: pointer;
+        filter: invert(0.8) brightness(50%) sepia(100%) saturate(10000%) hue-rotate(20deg);
+    }
+    .date-container {
+        display: inline-flex;
+        align-items: center; /* Isso centraliza verticalmente os elementos */
+    }
+
+    /* Opcional: Adicione margem entre os botões e o h1 */
+    .date-container button {
+        margin: 0px 15px;
+    }
+
+    #previus, #next {
+        background-color: #007bff; /* Azul */
+        color: #ffffff;
+        margin-right: 10px;
+        display: none;
+    }
+    
+</style>
+</head>
+<body>
+    <div class="button-container">
+        <h1>Ranking de Vendas</h1>
+        <div class="date-container">
+            <button id="previus">anterior</button>
+            <h1 id="lastDate"></h1>
+            <button id="next">proximo</button>
+        </div>
+        <br>
+        <input id="openCalendarButton" type="date" name="date">
+    </div>
+
+    
+    <div class="button-container">
+        <button id="diaria" class="selected">Hoje</button>
+        <button id="mensal">Mês</button>
+    </div>
+    <table id="salesTable">
+        <thead>
+            <tr>
+                <th>Posição</th>
+                <th>Vendedor</th>
+                <th>Vendas (R$)</th>
+                <th>Progresso</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Os dados serão preenchidos dinamicamente aqui -->
+        </tbody>
+    </table>
+    <script>
+        
+        class SalesLoader {
+    async loadSalesData(fetchSalesData) {
+        try {
+            const response = await fetch(fetchSalesData());
+            const data = await response.json();
+            return data.scores;
+        } catch (error) {
+            console.error('Erro ao buscar dados de vendas:', error);
+            return [];
+        }
+    }
+}
+
+class SalesTable {
+    constructor(tableId) {
+        this.salesTable = document.getElementById(tableId);
+    }
+
+    clearTable() {
+        this.salesTable.querySelector('tbody').innerHTML = '';
+    }
+
+    renderRow(sales, index) {
+        const progressPercentage = Math.min((sales.sales / sales.sales_goal) * 100, 100);
+        const progressBarColor = sales.sales < sales.sales_goal ? 'red' : '#4caf50';
+        const emojis = ['🥇', '🥈', '🥉', '😢'];
+        return `
+            <tr>
+                <td class="rank">${index + 1}º${emojis[index]}</td>
+                <td>👨‍💼${sales.name}</td>
+                <td>💰R$${sales.sales.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                <td>
+                    <div class="progress-bar">
+                        <div class="progress-bar-fill" style="width: ${progressPercentage}%; background-color: ${progressBarColor};"></div>
+                        <div class="progress-bar-text">📈${Math.round(progressPercentage)}%</div>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }
+
+    renderTable(salesData) {
+        this.clearTable();
+        salesData.forEach((sales, index) => {
+            const row = this.renderRow(sales, index);
+            this.salesTable.querySelector('tbody').innerHTML += row;
+        });
+    }
+}
+
+const salesLoader = new SalesLoader();
+const salesTable = new SalesTable('salesTable');
+
+async function loadSalesData(fetchFunction) {
+    const salesData = await salesLoader.loadSalesData(fetchFunction);
+    salesTable.renderTable(salesData);
+}
+
+function dailySalesFetchUrl(date) {
+    if (date)  return `http://127.0.0.1:5900/daily/${date}`; 
+    else  return `http://127.0.0.1:5900/daily`; 
+}
+
+function monthlySalesFetchUrl() {
+    return `http://127.0.0.1:5900/monthly`;
+}
+
+async function dailySalesLoad() {
+    const selectedDate = document.querySelector('#openCalendarButton').value;
+    document.querySelector('#openCalendarButton').value = '';
+    if (selectedDate) {
+        // Formatar a data para dd/mm/yyyy
+        const formattedDate = formatDate(selectedDate);
+        document.querySelector('#lastDate').textContent = formattedDate;
+        updateButtonSelection('mensal', 'diaria');
+        document.querySelector('#previus').style.display = 'inline-flex';
+        document.querySelector('#next').style.display = 'inline-flex';
+        await loadSalesData(() => dailySalesFetchUrl(selectedDate)); 
+        
+    } else {
+        document.querySelector('#lastDate').textContent = '';
+        updateButtonSelection('diaria', 'mensal');
+        document.querySelector('#previus').style.display = 'none';
+        document.querySelector('#next').style.display = 'none';
+        await loadSalesData(() => dailySalesFetchUrl());
+    }
+}
+
+function formatDate(dateString) {
+    const [year, month, day] = dateString.split('-');
+    return `${day}/${month}/${year}`;
+}
+
+async function getNextDate(){
+    const hasLastDate = document.querySelector('#lastDate').textContent
+    
+    if (hasLastDate){
+        const currentDate = document.querySelector('#lastDate').textContent;
+        const [day, month, year] = currentDate.split('/');
+        const currentDay = parseInt(day, 10);
+        const currentMonth = parseInt(month, 10);
+        const daysInMonth = new Date(year, currentMonth, 0).getDate();
+        const nextDay = (currentDay % daysInMonth) + 1;
+        const formattedNextDate = `${year}-${month}-${nextDay.toString().padStart(2, '0')}`;
+        const selectedDate = document.querySelector('#openCalendarButton').value = formattedNextDate
+        await dailySalesLoad()
+    }  
+}
+
+async function getPreviusDate(){
+    const hasLastDate = document.querySelector('#lastDate').textContent
+    
+    if (hasLastDate){
+        const currentDate = document.querySelector('#lastDate').textContent;
+        const [day, month, year] = currentDate.split('/');
+        const currentDay = parseInt(day, 10);
+        const currentMonth = parseInt(month, 10);
+        const daysInMonth = new Date(year, currentMonth, 0).getDate();
+        const previusDay = (currentDay % daysInMonth) - 1;
+        const formattedpreviusDate = `${year}-${month}-${previusDay.toString().padStart(2, '0')}`;
+        const selectedDate = document.querySelector('#openCalendarButton').value = formattedpreviusDate
+        await dailySalesLoad()
+    }  
+}
+
+
+async function monthlySalesLoad() {
+    
+    await loadSalesData(() => monthlySalesFetchUrl());
+    updateButtonSelection('mensal', 'diaria');
+}
+
+function updateButtonSelection(selectedButtonId, deselectedButtonId) {
+    document.getElementById(selectedButtonId).classList.add('selected');
+    document.getElementById(deselectedButtonId).classList.remove('selected');
+}
+
+document.querySelector('#diaria').addEventListener('click', dailySalesLoad);
+document.querySelector('#mensal').addEventListener('click', monthlySalesLoad);
+document.querySelector('#openCalendarButton').addEventListener('change', dailySalesLoad);
+document.querySelector('#next').addEventListener('click', getNextDate);
+document.querySelector('#previus').addEventListener('click', getPreviusDate);
+window.onload = dailySalesLoad;
+
+
+    </script>
+    </body>
+</html>
